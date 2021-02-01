@@ -1,13 +1,13 @@
 {
   "id": "clockmod",
   "name": "Clock Mod",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "author": "BoopetyDoopety",
   "description": [
     "Displays the time in game. \n\nDoes not currently work with Hitscore Visualiser"
   ],
   "category": "Gameplay",
-  "gameVersion": "1.13.0",
+  "gameVersion": "1.13.2",
   "platform": "Quest",
   "components": [
     {
@@ -22,7 +22,7 @@
     {
       "type": "HookModLibrary",
       "installAction": {
-        "installLibraryFile": "libbeatsaber-hook_0_8_4.so"
+        "installLibraryFile": "libbeatsaber-hook_1_0_12.so"
       }
     }
   ]
