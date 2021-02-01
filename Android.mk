@@ -28,9 +28,9 @@ LOCAL_SRC_FILES := extern/libmodloader.so
 include $(PREBUILT_SHARED_LIBRARY)
 # Creating prebuilt for dependency: beatsaber-hook - version: 0.8.4
 include $(CLEAR_VARS)
-LOCAL_MODULE := beatsaber-hook_0_8_4
+LOCAL_MODULE := beatsaber-hook_1_0_12
 LOCAL_EXPORT_C_INCLUDES := extern/beatsaber-hook
-LOCAL_SRC_FILES := extern/libbeatsaber-hook_0_8_4.so
+LOCAL_SRC_FILES := extern/libbeatsaber-hook_1_0_12.so
 LOCAL_CPP_FEATURES += exceptions
 include $(PREBUILT_SHARED_LIBRARY)
 # Creating prebuilt for dependency: codegen - version: 0.4.0
