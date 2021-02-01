@@ -39,7 +39,7 @@ using namespace ClockMod;
 #include "custom-types/shared/register.hpp"
 using namespace custom_types;
 
-static ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
+ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
 
 // Loads the config from disk using our modInfo, then returns it for use
 Configuration& getConfig() {
@@ -49,9 +49,9 @@ Configuration& getConfig() {
 }
 
 // Returns a logger, useful for printing debug messages
-const Logger& getLogger() {
-    static const Logger logger(modInfo);
-    return logger;
+    Logger& logger() {
+    static auto logger = new Logger(modInfo, LoggerOptions(false, true));
+    return *logger;
 }
 
 UnityEngine::Canvas* canvas;
@@ -93,7 +93,7 @@ MAKE_HOOK_OFFSETLESS(AudioTimeSyncController_StartSong, void, AudioTimeSyncContr
 
     if(getConfig().config["insong"].GetBool() == false){
         canvas->get_gameObject()->SetActive(false);
-        getLogger().info("SetActive");
+        logger().info("SetActive");
     }
 }
 
@@ -102,7 +102,7 @@ MAKE_HOOK_OFFSETLESS(SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowC
 
     if(getConfig().config["insong"].GetBool() == false){
         canvas->get_gameObject()->SetActive(true);
-        getLogger().info("SetActive");
+        logger().info("SetActive");
     }
 }
 
@@ -111,7 +111,7 @@ MAKE_HOOK_OFFSETLESS(PauseMenuManager_ShowMenu, void, PauseMenuManager* self){
 
     if(getConfig().config["insong"].GetBool() == false){
         canvas->get_gameObject()->SetActive(true);
-        getLogger().info("SetActive");
+        logger().info("SetActive");
     }
 }
 
@@ -120,7 +120,7 @@ MAKE_HOOK_OFFSETLESS(PauseMenuManager_StartResumeAnimation, void, PauseMenuManag
 
     if(getConfig().config["insong"].GetBool() == false){
         canvas->get_gameObject()->SetActive(false);
-        getLogger().info("SetActive");
+        logger().info("SetActive");
     }
 }
 
@@ -143,7 +143,7 @@ extern "C" void setup(ModInfo& info) {
     modInfo = info;
 	
     getConfig().Load(); // Load the config file
-    getLogger().info("Completed setup!");
+    logger().info("Completed setup!");
 
     rapidjson::Document::AllocatorType& allocator = getConfig().config.GetAllocator();
     if(!getConfig().config.HasMember("insong")){
@@ -157,19 +157,21 @@ extern "C" void load() {
     il2cpp_functions::Init();
     QuestUI::Init();
 
-    getLogger().info("Installing hooks...");
+    logger().info("Installing Clockmod hooks...");
+
+    Logger& hookLogger = logger();
 
     custom_types::Register::RegisterType<ClockMod::ClockUpdater>();
     custom_types::Register::RegisterType<ClockMod::ClockViewController>();
     QuestUI::Register::RegisterModSettingsViewController<ClockMod::ClockViewController*>(modInfo);
 
-    INSTALL_HOOK_OFFSETLESS(MainMenuViewController_DidActivate, il2cpp_utils::FindMethodUnsafe("", "MainMenuViewController", "DidActivate", 3));
-    INSTALL_HOOK_OFFSETLESS(AudioTimeSyncController_StartSong, il2cpp_utils::FindMethodUnsafe("", "AudioTimeSyncController", "StartSong", 1));
-    INSTALL_HOOK_OFFSETLESS(SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, il2cpp_utils::FindMethodUnsafe("", "SoloFreePlayFlowCoordinator", "SinglePlayerLevelSelectionFlowCoordinatorDidActivate", 2));
-    INSTALL_HOOK_OFFSETLESS(PauseMenuManager_ShowMenu, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "ShowMenu", 0));
-    INSTALL_HOOK_OFFSETLESS(PauseMenuManager_StartResumeAnimation, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "StartResumeAnimation", 0));
-    INSTALL_HOOK_OFFSETLESS(MultiplayerLobbyController_ActivateMultiplayerLobby, il2cpp_utils::FindMethodUnsafe("", "MultiplayerLobbyController", "ActivateMultiplayerLobby", 0));
-    INSTALL_HOOK_OFFSETLESS(MultiplayerLobbyController_DeactivateMultiplayerLobby, il2cpp_utils::FindMethodUnsafe("", "MultiplayerLobbyController", "DeactivateMultiplayerLobby", 0));
+    INSTALL_HOOK_OFFSETLESS(hookLogger,  MainMenuViewController_DidActivate, il2cpp_utils::FindMethodUnsafe("", "MainMenuViewController", "DidActivate", 3));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, AudioTimeSyncController_StartSong, il2cpp_utils::FindMethodUnsafe("", "AudioTimeSyncController", "StartSong", 1));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, il2cpp_utils::FindMethodUnsafe("", "SoloFreePlayFlowCoordinator", "SinglePlayerLevelSelectionFlowCoordinatorDidActivate", 2));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, PauseMenuManager_ShowMenu, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "ShowMenu", 0));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, PauseMenuManager_StartResumeAnimation, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "StartResumeAnimation", 0));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, MultiplayerLobbyController_ActivateMultiplayerLobby, il2cpp_utils::FindMethodUnsafe("", "MultiplayerLobbyController", "ActivateMultiplayerLobby", 0));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, MultiplayerLobbyController_DeactivateMultiplayerLobby, il2cpp_utils::FindMethodUnsafe("", "MultiplayerLobbyController", "DeactivateMultiplayerLobby", 0));
 
-    getLogger().info("Installed all hooks!");
+    logger().info("Installed all ClockMod hooks!");
 }
