@@ -4,7 +4,7 @@
   "version": "0.1.2",
   "author": "BoopetyDoopety",
   "description": [
-    "Displays the time in game. \n\nDoes not currently work with Hitscore Visualiser"
+    "Displays the time in game."
   ],
   "category": "Gameplay",
   "gameVersion": "1.13.2",
