@@ -35,9 +35,9 @@ LOCAL_CPP_FEATURES += exceptions
 include $(PREBUILT_SHARED_LIBRARY)
 # Creating prebuilt for dependency: codegen - version: 0.4.0
 include $(CLEAR_VARS)
-LOCAL_MODULE := codegen_0_4_0
+LOCAL_MODULE := codegen_0_6_2
 LOCAL_EXPORT_C_INCLUDES := extern/codegen
-LOCAL_SRC_FILES := extern/libcodegen_0_4_0.so
+LOCAL_SRC_FILES := extern/libcodegen_0_6_2.so
 include $(PREBUILT_SHARED_LIBRARY)
 # Creating prebuilt for dependency: questui - version: 0.2.8
 include $(CLEAR_VARS)
@@ -59,7 +59,7 @@ LOCAL_SRC_FILES += $(call rwildcard,extern/beatsaber-hook/src/inline-hook,*.cpp)
 LOCAL_SRC_FILES += $(call rwildcard,extern/beatsaber-hook/src/inline-hook,*.c)
 LOCAL_SHARED_LIBRARIES += modloader
 LOCAL_SHARED_LIBRARIES += beatsaber-hook_1_0_12
-LOCAL_SHARED_LIBRARIES += codegen_0_4_0
+LOCAL_SHARED_LIBRARIES += codegen_0_6_2
 LOCAL_SHARED_LIBRARIES += questui
 LOCAL_SHARED_LIBRARIES += custom-types
 LOCAL_LDLIBS += -llog
