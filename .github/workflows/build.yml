@@ -1,5 +1,9 @@
 on:
+  workflow_run:
+    branches: [ master ]
   push:
+    branches: [ master ]
+  pull_request:
     branches: [ master ]
 jobs:
   build:
