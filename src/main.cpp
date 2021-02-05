@@ -49,7 +49,7 @@ Configuration& getConfig() {
 }
 
 // Returns a logger, useful for printing debug messages
-    Logger& logger() {
+Logger& logger() {
     static auto logger = new Logger(modInfo, LoggerOptions(false, true));
     return *logger;
 }
@@ -57,21 +57,21 @@ Configuration& getConfig() {
 UnityEngine::Canvas* canvas;
 UnityEngine::UI::VerticalLayoutGroup* layout;
 
-MAKE_HOOK_OFFSETLESS(MainMenuViewController_DidActivate, void, MainMenuViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling){
+MAKE_HOOK_OFFSETLESS(MainMenuViewController_DidActivate, void, MainMenuViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     MainMenuViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
-    if(firstActivation){
+    if (firstActivation) {
         auto canvas_object = UnityEngine::GameObject::New_ctor(il2cpp_utils::createcsstr("Canvas"));
         canvas = canvas_object->AddComponent<UnityEngine::Canvas*>();
         auto canvas_scaler = canvas_object->AddComponent<CanvasScaler*>();
         auto canvas_renderer = canvas_object->AddComponent<CanvasRenderer*>();
 
         canvas_object->AddComponent<CurvedCanvasSettings*>();
-        canvas_object->get_transform()->set_position(UnityEngine::Vector3(0,0.5,2.6));
-        canvas_object->get_transform()->set_localScale(UnityEngine::Vector3(0.1,0.1,0.1));
+        canvas_object->get_transform()->set_position(UnityEngine::Vector3(0, 0.5, 2.6));
+        canvas_object->get_transform()->set_localScale(UnityEngine::Vector3(0.1, 0.1, 0.1));
 
         Object::DontDestroyOnLoad(canvas_object);
-    
+
         canvas->set_renderMode(UnityEngine::RenderMode::WorldSpace);
 
         layout = QuestUI::BeatSaberUI::CreateVerticalLayoutGroup(canvas_object->get_transform());
@@ -80,74 +80,82 @@ MAKE_HOOK_OFFSETLESS(MainMenuViewController_DidActivate, void, MainMenuViewContr
         layout->GetComponent<LayoutElement*>()->set_minWidth(7);
         layout->GetComponent<LayoutElement*>()->set_minHeight(80);
         layout->set_childAlignment(TMPro::TextAlignmentOptions::Center);
-        layout->get_transform()->set_position(UnityEngine::Vector3(0,-2.20,3));
+        layout->get_transform()->set_position(UnityEngine::Vector3(0, -2.20, 3));
         clock_text->set_fontSize(4);
-        clock_text->get_transform()->set_position(UnityEngine::Vector3(0,1,2.6));
+        clock_text->get_transform()->set_position(UnityEngine::Vector3(0, 1, 2.6));
         clock_text->get_gameObject()->AddComponent<ClockMod::ClockUpdater*>();
     }
     canvas->get_gameObject()->SetActive(true);
 }
 
-MAKE_HOOK_OFFSETLESS(AudioTimeSyncController_StartSong, void, AudioTimeSyncController* self, float startTimeOffset){
+MAKE_HOOK_OFFSETLESS(AudioTimeSyncController_StartSong, void, AudioTimeSyncController* self, float startTimeOffset) {
     AudioTimeSyncController_StartSong(self, startTimeOffset);
 
-    if(getConfig().config["insong"].GetBool() == false){
+    if (getConfig().config["insong"].GetBool() == false) {
         canvas->get_gameObject()->SetActive(false);
         logger().info("SetActive");
     }
 }
 
-MAKE_HOOK_OFFSETLESS(SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, void, SoloFreePlayFlowCoordinator* self, bool firstActivation, bool addedToHierarchy){
+MAKE_HOOK_OFFSETLESS(SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, void, SoloFreePlayFlowCoordinator* self, bool firstActivation, bool addedToHierarchy) {
     SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate(self, firstActivation, addedToHierarchy);
 
-    if(getConfig().config["insong"].GetBool() == false){
+    if (getConfig().config["insong"].GetBool() == false) {
         canvas->get_gameObject()->SetActive(true);
         logger().info("SetActive");
     }
 }
 
-MAKE_HOOK_OFFSETLESS(PauseMenuManager_ShowMenu, void, PauseMenuManager* self){
+MAKE_HOOK_OFFSETLESS(PauseMenuManager_ShowMenu, void, PauseMenuManager* self) {
     PauseMenuManager_ShowMenu(self);
 
-    if(getConfig().config["insong"].GetBool() == false){
+    if (getConfig().config["insong"].GetBool() == false) {
         canvas->get_gameObject()->SetActive(true);
         logger().info("SetActive");
     }
 }
 
-MAKE_HOOK_OFFSETLESS(PauseMenuManager_StartResumeAnimation, void, PauseMenuManager* self){
+MAKE_HOOK_OFFSETLESS(PauseMenuManager_StartResumeAnimation, void, PauseMenuManager* self) {
     PauseMenuManager_StartResumeAnimation(self);
 
-    if(getConfig().config["insong"].GetBool() == false){
+    if (getConfig().config["insong"].GetBool() == false) {
         canvas->get_gameObject()->SetActive(false);
         logger().info("SetActive");
     }
 }
 
-MAKE_HOOK_OFFSETLESS(MultiplayerLobbyController_ActivateMultiplayerLobby, void, MultiplayerLobbyController* self){
+MAKE_HOOK_OFFSETLESS(MultiplayerLobbyController_ActivateMultiplayerLobby, void, MultiplayerLobbyController* self) {
     MultiplayerLobbyController_ActivateMultiplayerLobby(self);
 
-    layout->get_transform()->set_position(UnityEngine::Vector3(0,-1.9,3));
+    layout->get_transform()->set_position(UnityEngine::Vector3(0, -1.9, 3));
 }
 
-MAKE_HOOK_OFFSETLESS(MultiplayerLobbyController_DeactivateMultiplayerLobby, void, MultiplayerLobbyController* self){
+MAKE_HOOK_OFFSETLESS(MultiplayerLobbyController_DeactivateMultiplayerLobby, void, MultiplayerLobbyController* self) {
     MultiplayerLobbyController_DeactivateMultiplayerLobby(self);
 
-    layout->get_transform()->set_position(UnityEngine::Vector3(0,-2.2,3));
+    layout->get_transform()->set_position(UnityEngine::Vector3(0, -2.2, 3));
 }
 
 // Called at the early stages of game loading
-extern "C" void setup(ModInfo& info) {
+extern "C" void setup(ModInfo & info) {
     info.id = "clockmod";
     info.version = VERSION;
     modInfo = info;
-	
+
     getConfig().Load(); // Load the config file
     logger().info("Completed setup!");
 
     rapidjson::Document::AllocatorType& allocator = getConfig().config.GetAllocator();
-    if(!getConfig().config.HasMember("insong")){
+    if (!getConfig().config.HasMember("insong")) {
         getConfig().config.AddMember("insong", rapidjson::Value(0).SetBool(false), allocator);
+        getConfig().Write();
+    }
+    if (!getConfig().config.HasMember("12Toggle")) {
+        getConfig().config.AddMember("12Toggle", rapidjson::Value(0).SetBool(false), allocator);
+        getConfig().Write();
+    }
+    if (!getConfig().config.HasMember("SecToggle")) {
+        getConfig().config.AddMember("SecToggle", rapidjson::Value(0).SetBool(false), allocator);
         getConfig().Write();
     }
 }
@@ -165,7 +173,7 @@ extern "C" void load() {
     custom_types::Register::RegisterType<ClockMod::ClockViewController>();
     QuestUI::Register::RegisterModSettingsViewController<ClockMod::ClockViewController*>(modInfo);
 
-    INSTALL_HOOK_OFFSETLESS(hookLogger,  MainMenuViewController_DidActivate, il2cpp_utils::FindMethodUnsafe("", "MainMenuViewController", "DidActivate", 3));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, MainMenuViewController_DidActivate, il2cpp_utils::FindMethodUnsafe("", "MainMenuViewController", "DidActivate", 3));
     INSTALL_HOOK_OFFSETLESS(hookLogger, AudioTimeSyncController_StartSong, il2cpp_utils::FindMethodUnsafe("", "AudioTimeSyncController", "StartSong", 1));
     INSTALL_HOOK_OFFSETLESS(hookLogger, SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, il2cpp_utils::FindMethodUnsafe("", "SoloFreePlayFlowCoordinator", "SinglePlayerLevelSelectionFlowCoordinatorDidActivate", 2));
     INSTALL_HOOK_OFFSETLESS(hookLogger, PauseMenuManager_ShowMenu, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "ShowMenu", 0));
