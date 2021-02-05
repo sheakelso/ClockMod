@@ -39,7 +39,7 @@ using namespace ClockMod;
 #include "custom-types/shared/register.hpp"
 using namespace custom_types;
 
-static ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
+ModInfo modInfo; // Stores the ID and version of our mod, and is sent to the modloader upon startup
 
 // Loads the config from disk using our modInfo, then returns it for use
 Configuration& getConfig() {
@@ -49,29 +49,29 @@ Configuration& getConfig() {
 }
 
 // Returns a logger, useful for printing debug messages
-const Logger& getLogger() {
-    static const Logger logger(modInfo);
-    return logger;
+Logger& logger() {
+    static auto logger = new Logger(modInfo, LoggerOptions(false, true));
+    return *logger;
 }
 
 UnityEngine::Canvas* canvas;
 UnityEngine::UI::VerticalLayoutGroup* layout;
 
-MAKE_HOOK_OFFSETLESS(MainMenuViewController_DidActivate, void, MainMenuViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling){
+MAKE_HOOK_OFFSETLESS(MainMenuViewController_DidActivate, void, MainMenuViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     MainMenuViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
-    if(firstActivation){
+    if (firstActivation) {
         auto canvas_object = UnityEngine::GameObject::New_ctor(il2cpp_utils::createcsstr("Canvas"));
         canvas = canvas_object->AddComponent<UnityEngine::Canvas*>();
         auto canvas_scaler = canvas_object->AddComponent<CanvasScaler*>();
         auto canvas_renderer = canvas_object->AddComponent<CanvasRenderer*>();
 
         canvas_object->AddComponent<CurvedCanvasSettings*>();
-        canvas_object->get_transform()->set_position(UnityEngine::Vector3(0,0.5,2.6));
-        canvas_object->get_transform()->set_localScale(UnityEngine::Vector3(0.1,0.1,0.1));
+        canvas_object->get_transform()->set_position(UnityEngine::Vector3(0, 0.5, 2.6));
+        canvas_object->get_transform()->set_localScale(UnityEngine::Vector3(0.1, 0.1, 0.1));
 
         Object::DontDestroyOnLoad(canvas_object);
-    
+
         canvas->set_renderMode(UnityEngine::RenderMode::WorldSpace);
 
         layout = QuestUI::BeatSaberUI::CreateVerticalLayoutGroup(canvas_object->get_transform());
@@ -80,74 +80,82 @@ MAKE_HOOK_OFFSETLESS(MainMenuViewController_DidActivate, void, MainMenuViewContr
         layout->GetComponent<LayoutElement*>()->set_minWidth(7);
         layout->GetComponent<LayoutElement*>()->set_minHeight(80);
         layout->set_childAlignment(TMPro::TextAlignmentOptions::Center);
-        layout->get_transform()->set_position(UnityEngine::Vector3(0,-2.20,3));
+        layout->get_transform()->set_position(UnityEngine::Vector3(0, -2.20, 3));
         clock_text->set_fontSize(4);
-        clock_text->get_transform()->set_position(UnityEngine::Vector3(0,1,2.6));
+        clock_text->get_transform()->set_position(UnityEngine::Vector3(0, 1, 2.6));
         clock_text->get_gameObject()->AddComponent<ClockMod::ClockUpdater*>();
     }
     canvas->get_gameObject()->SetActive(true);
 }
 
-MAKE_HOOK_OFFSETLESS(AudioTimeSyncController_StartSong, void, AudioTimeSyncController* self, float startTimeOffset){
+MAKE_HOOK_OFFSETLESS(AudioTimeSyncController_StartSong, void, AudioTimeSyncController* self, float startTimeOffset) {
     AudioTimeSyncController_StartSong(self, startTimeOffset);
 
-    if(getConfig().config["insong"].GetBool() == false){
+    if (getConfig().config["insong"].GetBool() == false) {
         canvas->get_gameObject()->SetActive(false);
-        getLogger().info("SetActive");
+        logger().info("SetActive");
     }
 }
 
-MAKE_HOOK_OFFSETLESS(SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, void, SoloFreePlayFlowCoordinator* self, bool firstActivation, bool addedToHierarchy){
+MAKE_HOOK_OFFSETLESS(SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, void, SoloFreePlayFlowCoordinator* self, bool firstActivation, bool addedToHierarchy) {
     SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate(self, firstActivation, addedToHierarchy);
 
-    if(getConfig().config["insong"].GetBool() == false){
+    if (getConfig().config["insong"].GetBool() == false) {
         canvas->get_gameObject()->SetActive(true);
-        getLogger().info("SetActive");
+        logger().info("SetActive");
     }
 }
 
-MAKE_HOOK_OFFSETLESS(PauseMenuManager_ShowMenu, void, PauseMenuManager* self){
+MAKE_HOOK_OFFSETLESS(PauseMenuManager_ShowMenu, void, PauseMenuManager* self) {
     PauseMenuManager_ShowMenu(self);
 
-    if(getConfig().config["insong"].GetBool() == false){
+    if (getConfig().config["insong"].GetBool() == false) {
         canvas->get_gameObject()->SetActive(true);
-        getLogger().info("SetActive");
+        logger().info("SetActive");
     }
 }
 
-MAKE_HOOK_OFFSETLESS(PauseMenuManager_StartResumeAnimation, void, PauseMenuManager* self){
+MAKE_HOOK_OFFSETLESS(PauseMenuManager_StartResumeAnimation, void, PauseMenuManager* self) {
     PauseMenuManager_StartResumeAnimation(self);
 
-    if(getConfig().config["insong"].GetBool() == false){
+    if (getConfig().config["insong"].GetBool() == false) {
         canvas->get_gameObject()->SetActive(false);
-        getLogger().info("SetActive");
+        logger().info("SetActive");
     }
 }
 
-MAKE_HOOK_OFFSETLESS(MultiplayerLobbyController_ActivateMultiplayerLobby, void, MultiplayerLobbyController* self){
+MAKE_HOOK_OFFSETLESS(MultiplayerLobbyController_ActivateMultiplayerLobby, void, MultiplayerLobbyController* self) {
     MultiplayerLobbyController_ActivateMultiplayerLobby(self);
 
-    layout->get_transform()->set_position(UnityEngine::Vector3(0,-1.9,3));
+    layout->get_transform()->set_position(UnityEngine::Vector3(0, -1.9, 3));
 }
 
-MAKE_HOOK_OFFSETLESS(MultiplayerLobbyController_DeactivateMultiplayerLobby, void, MultiplayerLobbyController* self){
+MAKE_HOOK_OFFSETLESS(MultiplayerLobbyController_DeactivateMultiplayerLobby, void, MultiplayerLobbyController* self) {
     MultiplayerLobbyController_DeactivateMultiplayerLobby(self);
 
-    layout->get_transform()->set_position(UnityEngine::Vector3(0,-2.2,3));
+    layout->get_transform()->set_position(UnityEngine::Vector3(0, -2.2, 3));
 }
 
 // Called at the early stages of game loading
-extern "C" void setup(ModInfo& info) {
+extern "C" void setup(ModInfo & info) {
     info.id = "clockmod";
     info.version = VERSION;
     modInfo = info;
-	
+
     getConfig().Load(); // Load the config file
-    getLogger().info("Completed setup!");
+    logger().info("Completed setup!");
 
     rapidjson::Document::AllocatorType& allocator = getConfig().config.GetAllocator();
-    if(!getConfig().config.HasMember("insong")){
+    if (!getConfig().config.HasMember("insong")) {
         getConfig().config.AddMember("insong", rapidjson::Value(0).SetBool(false), allocator);
+        getConfig().Write();
+    }
+    if (!getConfig().config.HasMember("12Toggle")) {
+        getConfig().config.AddMember("12Toggle", rapidjson::Value(0).SetBool(false), allocator);
+        getConfig().Write();
+    }
+    if (!getConfig().config.HasMember("SecToggle")) {
+        getConfig().config.AddMember("SecToggle", rapidjson::Value(0).SetBool(false), allocator);
         getConfig().Write();
     }
 }
@@ -157,19 +165,21 @@ extern "C" void load() {
     il2cpp_functions::Init();
     QuestUI::Init();
 
-    getLogger().info("Installing hooks...");
+    logger().info("Installing Clockmod hooks...");
+
+    Logger& hookLogger = logger();
 
     custom_types::Register::RegisterType<ClockMod::ClockUpdater>();
     custom_types::Register::RegisterType<ClockMod::ClockViewController>();
     QuestUI::Register::RegisterModSettingsViewController<ClockMod::ClockViewController*>(modInfo);
 
-    INSTALL_HOOK_OFFSETLESS(MainMenuViewController_DidActivate, il2cpp_utils::FindMethodUnsafe("", "MainMenuViewController", "DidActivate", 3));
-    INSTALL_HOOK_OFFSETLESS(AudioTimeSyncController_StartSong, il2cpp_utils::FindMethodUnsafe("", "AudioTimeSyncController", "StartSong", 1));
-    INSTALL_HOOK_OFFSETLESS(SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, il2cpp_utils::FindMethodUnsafe("", "SoloFreePlayFlowCoordinator", "SinglePlayerLevelSelectionFlowCoordinatorDidActivate", 2));
-    INSTALL_HOOK_OFFSETLESS(PauseMenuManager_ShowMenu, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "ShowMenu", 0));
-    INSTALL_HOOK_OFFSETLESS(PauseMenuManager_StartResumeAnimation, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "StartResumeAnimation", 0));
-    INSTALL_HOOK_OFFSETLESS(MultiplayerLobbyController_ActivateMultiplayerLobby, il2cpp_utils::FindMethodUnsafe("", "MultiplayerLobbyController", "ActivateMultiplayerLobby", 0));
-    INSTALL_HOOK_OFFSETLESS(MultiplayerLobbyController_DeactivateMultiplayerLobby, il2cpp_utils::FindMethodUnsafe("", "MultiplayerLobbyController", "DeactivateMultiplayerLobby", 0));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, MainMenuViewController_DidActivate, il2cpp_utils::FindMethodUnsafe("", "MainMenuViewController", "DidActivate", 3));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, AudioTimeSyncController_StartSong, il2cpp_utils::FindMethodUnsafe("", "AudioTimeSyncController", "StartSong", 1));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, SoloFreePlayFlowCoordinator_SinglePlayerLevelSelectionFlowCoordinatorDidActivate, il2cpp_utils::FindMethodUnsafe("", "SoloFreePlayFlowCoordinator", "SinglePlayerLevelSelectionFlowCoordinatorDidActivate", 2));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, PauseMenuManager_ShowMenu, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "ShowMenu", 0));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, PauseMenuManager_StartResumeAnimation, il2cpp_utils::FindMethodUnsafe("", "PauseMenuManager", "StartResumeAnimation", 0));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, MultiplayerLobbyController_ActivateMultiplayerLobby, il2cpp_utils::FindMethodUnsafe("", "MultiplayerLobbyController", "ActivateMultiplayerLobby", 0));
+    INSTALL_HOOK_OFFSETLESS(hookLogger, MultiplayerLobbyController_DeactivateMultiplayerLobby, il2cpp_utils::FindMethodUnsafe("", "MultiplayerLobbyController", "DeactivateMultiplayerLobby", 0));
 
-    getLogger().info("Installed all hooks!");
+    logger().info("Installed all ClockMod hooks!");
 }
